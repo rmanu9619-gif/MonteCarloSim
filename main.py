@@ -64,7 +64,7 @@ tab1, tab2 = st.tabs(["RSI Dashboard", "Monte Carlo Simulator"])
 with tab1:
     st.title("RSI Stock Dashboard 📊")
     ticker_list_rsi = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]  # truncated for example, replace with full list
-    ticker_rsi = st.selectbox("Select stock ticker:", ticker_list_rsi)
+    ticker_rsi = st.selectbox("Select RSI stock ticker:", ticker_list_rsi)
     if st.button("Calculate RSI"):
         data_rsi = yf.download(ticker_rsi, period="6mo")
         if data_rsi.empty:
@@ -77,7 +77,7 @@ with tab1:
 with tab2:
     st.title("Monte Carlo Stock Simulator 📈")
     ticker_list_mc = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]  # truncated for example, replace with full list
-    ticker_mc = st.selectbox("Select stock ticker:", ticker_list_mc)
+    ticker_mc = st.selectbox("Select Monte Carlo stock ticker:", ticker_list_mc)
     n_simulations = st.slider("Number of simulations:", 1000, 50000, 10000, step=1000)
     horizon_option = st.selectbox(
         "Time period:",
