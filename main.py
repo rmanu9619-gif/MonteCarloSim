@@ -9,21 +9,26 @@ def wilder_rsi(prices, period=14):
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
 
+    # First average gain/loss
     avg_gain = gain.rolling(window=period, min_periods=period).mean()
     avg_loss = loss.rolling(window=period, min_periods=period).mean()
 
-    rsi = pd.Series(np.zeros(len(prices)), index=prices.index)
-    rsi[:period] = 50  # neutral for first values
-
+    # Wilder smoothing for rest of the values
     for i in range(period, len(prices)):
         avg_gain.iloc[i] = (avg_gain.iloc[i-1] * (period - 1) + gain.iloc[i]) / period
         avg_loss.iloc[i] = (avg_loss.iloc[i-1] * (period - 1) + loss.iloc[i]) / period
-        rs = avg_gain.iloc[i] / avg_loss.iloc[i] if avg_loss.iloc[i] != 0 else 0
-        rsi.iloc[i] = 100 - (100 / (1 + rs))
+
+    # Compute RSI safely
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rsi = 100 - (100 / (1 + rs))
+    
+    # Fill initial NaNs with 0 (optional)
+    rsi = rsi.fillna(0)
     return rsi
 
-def calculate_rsi(data):
-    data['RSI'] = wilder_rsi(data['Close'])
+def calculate_rsi(data, period=14):
+    data = data.copy()
+    data['RSI'] = wilder_rsi(data['Close'], period)
     return data
 
 def color_rsi(val):
