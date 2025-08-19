@@ -100,46 +100,15 @@ def calculate_rsi(data):
 # Monte Carlo Code
 # -------------------------
 class MonteCarloSimulator:
-  st.title("Monte Carlo Stock Simulator 📈")
-    ticker_list_mc = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]  # truncated for example, replace with full list
-    ticker_mc = st.selectbox("Select stock ticker:", ticker_list_mc)
-    n_simulations = st.slider("Number of simulations:", 1000, 50000, 10000, step=1000)
-    horizon_option = st.selectbox(
-        "Time period:",
-        ["1 week", "1 month", "3 months", "6 months", "1 year"]
-    )
+  def monte_carlo_simulation(S0, mu, sigma, T=1, steps=252, sims=1000):
+    dt = T/steps
+    price_matrix = np.zeros((steps, sims))
+    price_matrix[0] = S0
+    for t in range(1, steps):
+        z = np.random.standard_normal(sims)
+        price_matrix[t] = price_matrix[t-1]*np.exp((mu - 0.5*sigma**2)*dt + sigma*np.sqrt(dt)*z)
+    return price_matrix
 
-    horizons = {
-        "1 week": 1/52,
-        "1 month": 1/12,
-        "3 months": 0.25,
-        "6 months": 0.5,
-        "1 year": 1.0
-    }
-    T = horizons[horizon_option]
-
-    if st.button("Run Simulation"):
-        with st.spinner("Fetching data and running simulations..."):
-            data_mc = yf.download(ticker_mc, period="1y")
-            if data_mc.empty:
-                st.error("Ticker not found or no data available!")
-            else:
-                S0 = float(data_mc["Close"].iloc[-1])
-                returns = data_mc["Close"].pct_change().dropna()
-                mu = float(returns.mean() * 252)
-                sigma = float(returns.std() * np.sqrt(252))
-
-                def stock_sim(T):
-                    Z = np.random.normal()
-                    return S0 * np.exp((mu - 0.5*sigma**2)*T + sigma*np.sqrt(T)*Z)
-
-                sim = MonteCarloSimulator(lambda: stock_sim(T), n_simulations)
-                result = sim.summary(S0)
-
-                st.success(f"Simulation complete for {ticker_mc} over {horizon_option}!")
-                st.metric("Percent chance it goes up", f"{result['percent_chance_up']:.2f}%")
-                st.metric("Average return", f"{result['average_return_percent']:.2f}%")
-        }
 
 # -------------------------
 # Streamlit UI with Tabs
