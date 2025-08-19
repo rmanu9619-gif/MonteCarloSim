@@ -100,14 +100,52 @@ def calculate_rsi(data):
 # Monte Carlo Code
 # -------------------------
 class MonteCarloSimulator:
-  def monte_carlo_simulation(S0, mu, sigma, T=1, steps=252, sims=1000):
-    dt = T/steps
-    price_matrix = np.zeros((steps, sims))
-    price_matrix[0] = S0
-    for t in range(1, steps):
-        z = np.random.standard_normal(sims)
-        price_matrix[t] = price_matrix[t-1]*np.exp((mu - 0.5*sigma**2)*dt + sigma*np.sqrt(dt)*z)
-    return price_matrix
+    def __init__(self, ticker, n_simulations=10000, horizon="1 month", random_seed=None):
+            self.ticker = ticker.upper()
+            self.n_simulations = n_simulations
+            self.horizon = horizon
+            if random_seed is not None:
+                np.random.seed(random_seed)
+    
+            # Time horizons in years
+            self.horizons = {
+                "1 week": 1/52,
+                "1 month": 1/12,
+                "3 months": 0.25,
+                "6 months": 0.5,
+                "1 year": 1.0
+            }
+            self.T = self.horizons.get(horizon, 1/12)  # default 1 month
+    
+            # Initialize stock data
+            self.S0, self.mu, self.sigma = self._fetch_stock_data()
+    
+    def _fetch_stock_data(self):
+        data = yf.download(self.ticker, period="1y")
+        if data.empty:
+            raise ValueError(f"Ticker {self.ticker} not found or no data available!")
+        S0 = float(data["Close"].iloc[-1])
+        returns = data["Close"].pct_change().dropna()
+        mu = float(returns.mean() * 252)
+        sigma = float(returns.std() * np.sqrt(252))
+        return S0, mu, sigma
+
+    def _simulate_one(self):
+        Z = np.random.normal()
+        return self.S0 * np.exp((self.mu - 0.5*self.sigma**2)*self.T + self.sigma*np.sqrt(self.T)*Z)
+
+    def run(self):
+        results = [self._simulate_one() for _ in range(self.n_simulations)]
+        return np.array(results)
+
+    def summary(self):
+        results = self.run()
+        prob_up = np.mean(results > self.S0) * 100
+        avg_return = np.mean(results / self.S0 - 1) * 100
+        return {
+            "percent_chance_up": prob_up,
+            "average_return_percent": avg_return
+        }
 
 
 # -------------------------
