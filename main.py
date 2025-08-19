@@ -192,12 +192,25 @@ with tab1:
 with tab2:
     st.header("Monte Carlo Simulation")
     
-    S0 = st.number_input("Initial stock price (S0):", value=100.0)
-    mu = st.number_input("Expected return (mu):", value=0.1)
-    sigma = st.number_input("Volatility (sigma):", value=0.2)
-    steps = st.number_input("Steps (days):", value=252)
-    sims = st.number_input("Simulations:", value=1000)
+    # Select ticker
+    ticker_input = st.text_input("Ticker for simulation:", value="AAPL")
+    
+    n_simulations = st.number_input("Number of simulations:", value=1000, step=100)
+    horizon_option = st.selectbox(
+        "Time horizon:",
+        ["1 week", "1 month", "3 months", "6 months", "1 year"]
+    )
     
     if st.button("Run Monte Carlo", key="run_mc"):
-        prices = monte_carlo_simulation(S0, mu, sigma, steps, steps, sims)
-        st.line_chart(prices)
+        try:
+            sim = MonteCarloSimulator(
+                ticker=ticker_input,
+                n_simulations=n_simulations,
+                horizon=horizon_option
+            )
+            result = sim.summary()
+            
+            st.metric("Percent chance it goes up", f"{result['percent_chance_up']:.2f}%")
+            st.metric("Average return", f"{result['average_return_percent']:.2f}%")
+        except ValueError as e:
+            st.error(str(e))
