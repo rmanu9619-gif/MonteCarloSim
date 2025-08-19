@@ -27,8 +27,9 @@ class MonteCarloSimulator:
 st.title("Monte Carlo Stock Simulator 📈")
 
 # User inputs
-ticker = st.text_input("Enter stock ticker:", "AAPL").upper()
-n_simulations = st.number_input("Number of simulations:", min_value=1000, value=10000, step=1000)
+ticker_list = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]  # Example list of tickers
+ticker = st.selectbox("Select stock ticker:", ticker_list)
+n_simulations = st.slider("Number of simulations:", min_value=1000, max_value=50000, value=10000, step=1000)
 
 st.write("Choose time horizon:")
 horizon_option = st.selectbox(
